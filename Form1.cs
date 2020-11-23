@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
@@ -60,11 +61,11 @@ namespace Song.ini_Editor
                             if (data[0].Contains("=")) 
                             {
                                 var inputName = data[0].Split(" = ".ToCharArray()).First();
-                                var inputData = data[0].Substring(data[0].LastIndexOf("=") + 1);
+                                var inputData = data[0].Substring(data[0].IndexOf("=", data[0].IndexOf("=")) + 1);
                                 Console.WriteLine(inputName);
                                 if (dt2.Columns.Contains(inputName) == false)
                                 {
-                                    dt2.Columns.Add(inputName);
+                                    dt2.Columns.Add(inputName.Trim());
                                 }
                                 Console.WriteLine(inputData);
                                 dt2.Rows[dt2.Rows.Count - 1][inputName] = inputData.Trim();
@@ -148,7 +149,42 @@ namespace Song.ini_Editor
         }
         private void button2_Click(object sender, EventArgs e)
         {
+            DataTable dt2 = Form1.dt;
+            Console.WriteLine("asdasdasd.");
+            for (int count = 0; count < dataGridView1.Rows.Count; count++)
+            {
+                string fileName = dataGridView1.Rows[count].Cells[0].Value.ToString();
+                Console.WriteLine(fileName);
+                var newFile = new StringBuilder();
 
+                string[] file = File.ReadAllLines(fileName);
+                newFile.Append("[Song]" + "\r\n");
+                foreach (string line in file)
+                {
+                    string[] data = line.Split('\n');
+                    for (int i = 0; i < dataGridView1.Columns.Count; i++)
+                    {
+                        string header = dataGridView1.Columns[i].HeaderText;
+                        if (data[0].Contains(header))
+                        {
+                            string toReplace = dt2.Rows[count][header].ToString();
+                            //Console.WriteLine("\"" + toReplace.Trim() + "\"");
+                            //Console.WriteLine("\"" + data[0].Substring(data[0].IndexOf(" = ", data[0].IndexOf(" = ")) + 2).Trim() + "\"");
+                            if (data[0].Substring(data[0].IndexOf("=", data[0].IndexOf("=")) + 1).Trim() != toReplace.Trim())
+                            {
+                                Console.WriteLine("Replacing " + (data[0].Substring(data[0].IndexOf("=", data[0].IndexOf("=")) + 1)) + " in " + header + " with " + toReplace);
+                                newFile.Append(header + " = " + toReplace.Trim() + "\r\n");
+                                continue;
+                            }
+                            else 
+                            { 
+                                newFile.Append(line + "\r\n"); 
+                            }
+                        }
+                    }
+                }
+                File.WriteAllText(fileName, newFile.ToString());
+            }
         }
     }
 }
