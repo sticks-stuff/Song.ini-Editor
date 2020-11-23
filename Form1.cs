@@ -197,5 +197,11 @@ namespace Song.ini_Editor
                 }
             }
         }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            AboutBox1 a = new AboutBox1();
+            a.Show();
+        }
     }
 }
