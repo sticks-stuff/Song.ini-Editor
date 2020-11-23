@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
 using ButtonBase = System.Windows.Controls.Primitives.ButtonBase;
+using MessageBox = System.Windows.Forms.MessageBox;
 
 namespace Song.ini_Editor
 {
@@ -149,41 +150,51 @@ namespace Song.ini_Editor
         }
         private void button2_Click(object sender, EventArgs e)
         {
-            DataTable dt2 = Form1.dt;
-            Console.WriteLine("asdasdasd.");
-            for (int count = 0; count < dataGridView1.Rows.Count; count++)
-            {
-                string fileName = dataGridView1.Rows[count].Cells[0].Value.ToString();
-                Console.WriteLine(fileName);
-                var newFile = new StringBuilder();
+            const string message = "WARNING!!\nTHIS WILL EDIT ALL SONG.INIS YOU HAVE IMPORTED\nAS THIS IS A PRERELEASE BUILD THERE MAY BE BUGS THAT WILL BREAK ALL YOUR SONG.INIS\nTHERE IS NO WAY TO UNDO!!!\nDo you wish to continue?";
+            const string caption = "WARNING!!";
+            var result = MessageBox.Show(message, caption,
+                                         MessageBoxButtons.YesNo,
+                                         MessageBoxIcon.Question);
 
-                string[] file = File.ReadAllLines(fileName);
-                newFile.Append("[Song]" + "\r\n");
-                foreach (string line in file)
+            // If the no button was pressed ...
+            if (result == DialogResult.Yes)
+            {
+                DataTable dt2 = Form1.dt;
+                Console.WriteLine("asdasdasd.");
+                for (int count = 0; count < dataGridView1.Rows.Count; count++)
                 {
-                    string[] data = line.Split('\n');
-                    for (int i = 0; i < dataGridView1.Columns.Count; i++)
+                    string fileName = dataGridView1.Rows[count].Cells[0].Value.ToString();
+                    Console.WriteLine(fileName);
+                    var newFile = new StringBuilder();
+
+                    string[] file = File.ReadAllLines(fileName);
+                    newFile.Append("[Song]" + "\r\n");
+                    foreach (string line in file)
                     {
-                        string header = dataGridView1.Columns[i].HeaderText;
-                        if (data[0].Contains(header))
+                        string[] data = line.Split('\n');
+                        for (int i = 0; i < dataGridView1.Columns.Count; i++)
                         {
-                            string toReplace = dt2.Rows[count][header].ToString();
-                            //Console.WriteLine("\"" + toReplace.Trim() + "\"");
-                            //Console.WriteLine("\"" + data[0].Substring(data[0].IndexOf(" = ", data[0].IndexOf(" = ")) + 2).Trim() + "\"");
-                            if (data[0].Substring(data[0].IndexOf("=", data[0].IndexOf("=")) + 1).Trim() != toReplace.Trim())
+                            string header = dataGridView1.Columns[i].HeaderText;
+                            if (data[0].Contains(header))
                             {
-                                Console.WriteLine("Replacing " + (data[0].Substring(data[0].IndexOf("=", data[0].IndexOf("=")) + 1)) + " in " + header + " with " + toReplace);
-                                newFile.Append(header + " = " + toReplace.Trim() + "\r\n");
-                                continue;
-                            }
-                            else 
-                            { 
-                                newFile.Append(line + "\r\n"); 
+                                string toReplace = dt2.Rows[count][header].ToString();
+                                //Console.WriteLine("\"" + toReplace.Trim() + "\"");
+                                //Console.WriteLine("\"" + data[0].Substring(data[0].IndexOf(" = ", data[0].IndexOf(" = ")) + 2).Trim() + "\"");
+                                if (data[0].Substring(data[0].IndexOf("=", data[0].IndexOf("=")) + 1).Trim() != toReplace.Trim())
+                                {
+                                    Console.WriteLine("Replacing " + (data[0].Substring(data[0].IndexOf("=", data[0].IndexOf("=")) + 1)) + " in " + header + " with " + toReplace);
+                                    newFile.Append(header + " = " + toReplace.Trim() + "\r\n");
+                                    continue;
+                                }
+                                else 
+                                { 
+                                    newFile.Append(line + "\r\n"); 
+                                }
                             }
                         }
                     }
+                    File.WriteAllText(fileName, newFile.ToString());
                 }
-                File.WriteAllText(fileName, newFile.ToString());
             }
         }
     }
