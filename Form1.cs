@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.IO;
@@ -6,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls.Primitives;
+using System.Windows.Documents;
 using System.Windows.Forms;
 using ButtonBase = System.Windows.Controls.Primitives.ButtonBase;
 using MessageBox = System.Windows.Forms.MessageBox;
@@ -16,16 +18,12 @@ namespace Song.ini_Editor
     {
 
         public static DataTable dt = new DataTable();
+        public static DataGridViewCell valueBuffer;
         public Form1()
         {
             InitializeComponent();
         }
         private void Form1_Load(object sender, EventArgs e)
-        {
-
-        }
-
-        private void openFileDialog2_FileOk(object sender, CancelEventArgs e)
         {
 
         }
@@ -49,8 +47,8 @@ namespace Song.ini_Editor
                 }
                 try
                 {
-                    foreach (string file in openFileDialog1.FileNames) 
-                    { 
+                    foreach (string file in openFileDialog1.FileNames)
+                    {
                         dt2.Rows.Add(file);
 
                         string text = File.ReadAllText(file);
@@ -59,7 +57,7 @@ namespace Song.ini_Editor
                         {
                             string[] data = line.Split('\n');
                             //Console.WriteLine(data[0]);
-                            if (data[0].Contains("=")) 
+                            if (data[0].Contains("="))
                             {
                                 var inputName = data[0].Split(" = ".ToCharArray()).First();
                                 var inputData = data[0].Substring(data[0].IndexOf("=", data[0].IndexOf("=")) + 1);
@@ -89,14 +87,9 @@ namespace Song.ini_Editor
 
         }
 
-        private void tableLayoutPanel1_Paint(object sender, PaintEventArgs e)
-        {
-
-        }
-
         private void openFileDialog1_FileOk(object sender, CancelEventArgs e)
         {
-            
+
         }
         private void dataGridView1_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
         {
@@ -111,41 +104,13 @@ namespace Song.ini_Editor
             }
         }
 
-        private int _keyValue;
-        private Boolean _checkKeyValue = false;
-        private int value;
-
-        private void dataGridView1_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
-        {
-            DataGridViewCell cell = dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex];
-
-            if (_checkKeyValue)
-            {
-                _checkKeyValue = false;
-
-                if (value != -1)
-                {
-                    cell.Value = _keyValue;
-                }
-            }
-        }
-
-        private void dataGridView1_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (dataGridView1.SelectedCells.Count > 1)
-            {
-                _checkKeyValue = true;
-                _keyValue = (int)e.KeyValue;
-                dataGridView1.BeginEdit(false);
-            }
-        }
 
         private void dataGridView1_CellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
             DataGridViewCell cell = dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex];
             foreach (DataGridViewCell cells in dataGridView1.SelectedCells)
             {
-                dataGridView1.Rows[cells.RowIndex].Cells[cells.ColumnIndex].Value = cell.Value;
+                //dataGridView1.Rows[cells.RowIndex].Cells[cells.ColumnIndex].Value = cell.Value;
             }
         }
         private void button2_Click(object sender, EventArgs e)
@@ -156,7 +121,6 @@ namespace Song.ini_Editor
                                          MessageBoxButtons.YesNo,
                                          MessageBoxIcon.Question);
 
-            // If the no button was pressed ...
             if (result == DialogResult.Yes)
             {
                 DataTable dt2 = Form1.dt;
@@ -169,6 +133,7 @@ namespace Song.ini_Editor
 
                     string[] file = File.ReadAllLines(fileName);
                     newFile.Append("[Song]" + "\r\n");
+                    List<string> doneHeaders = new List<string>();
                     foreach (string line in file)
                     {
                         string[] data = line.Split('\n');
@@ -177,19 +142,26 @@ namespace Song.ini_Editor
                             string header = dataGridView1.Columns[i].HeaderText;
                             if (data[0].Contains(header))
                             {
+                                doneHeaders.ForEach(k => Console.Write("{0}\n", k));
+                                Console.WriteLine(doneHeaders.Contains(header.Trim()));
                                 string toReplace = dt2.Rows[count][header].ToString();
                                 //Console.WriteLine("\"" + toReplace.Trim() + "\"");
                                 //Console.WriteLine("\"" + data[0].Substring(data[0].IndexOf(" = ", data[0].IndexOf(" = ")) + 2).Trim() + "\"");
-                                if (data[0].Substring(data[0].IndexOf("=", data[0].IndexOf("=")) + 1).Trim() != toReplace.Trim())
+                                if (data[0].Substring(data[0].IndexOf("=", data[0].IndexOf("=")) + 1).Trim() != toReplace.Trim() && doneHeaders.Contains(header.Trim()) != true)
                                 {
                                     Console.WriteLine("Replacing " + (data[0].Substring(data[0].IndexOf("=", data[0].IndexOf("=")) + 1)) + " in " + header + " with " + toReplace);
                                     newFile.Append(header + " = " + toReplace.Trim() + "\r\n");
                                     continue;
                                 }
-                                else 
-                                { 
-                                    newFile.Append(line + "\r\n"); 
+                                else
+                                {
+                                    if (doneHeaders.Contains(header.Trim()) != true)
+                                    {
+                                        newFile.Append(line + "\r\n");
+                                    }
                                 }
+                                doneHeaders.Add(header.Trim());
+                                Console.WriteLine("ADDED " + header.Trim());
                             }
                         }
                     }
@@ -202,6 +174,21 @@ namespace Song.ini_Editor
         {
             AboutBox1 a = new AboutBox1();
             a.Show();
+        }
+
+        private void dataGridView1_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            DataGridViewCell cell = dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex];
+            if (dataGridView1.SelectedCells.Count > 1)
+            {
+                foreach (DataGridViewCell cells in dataGridView1.SelectedCells)
+                {
+                    if (cells.ReadOnly == false)
+                    {
+                        dataGridView1.Rows[cells.RowIndex].Cells[cells.ColumnIndex].Value = cell.Value;
+                    }
+                }
+            }
         }
     }
 }
