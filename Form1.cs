@@ -104,15 +104,6 @@ namespace Song.ini_Editor
             }
         }
 
-
-        private void dataGridView1_CellEndEdit(object sender, DataGridViewCellEventArgs e)
-        {
-            DataGridViewCell cell = dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex];
-            foreach (DataGridViewCell cells in dataGridView1.SelectedCells)
-            {
-                //dataGridView1.Rows[cells.RowIndex].Cells[cells.ColumnIndex].Value = cell.Value;
-            }
-        }
         private void button2_Click(object sender, EventArgs e)
         {
             const string message = "WARNING!!\nTHIS WILL EDIT ALL SONG.INIS YOU HAVE IMPORTED\nAS THIS IS A PRERELEASE BUILD THERE MAY BE BUGS THAT WILL BREAK ALL YOUR SONG.INIS\nTHERE IS NO WAY TO UNDO!!!\nDo you wish to continue?";
